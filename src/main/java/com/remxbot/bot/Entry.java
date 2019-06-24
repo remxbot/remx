@@ -54,6 +54,11 @@ package com.remxbot.bot;
 public class Entry {
     // TODO Set up Spring
     public static void main(String...args) {
-        new RemxBot(args[0]);
+        var bot = new RemxBot(args[0]);
+
+        // attempt a graceful shutdown even though it'll most likely fail
+        Runtime.getRuntime().addShutdownHook(new Thread(bot::logout));
+
+        bot.run();
     }
 }

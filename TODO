@@ -1,0 +1,9 @@
+Audio state control
+Loop mode
+Single mode (overrides loop)
+Player controls
+Filters:
+  - Equalizer (provided with lavaplayer)
+  - Gain control
+  - TODO: think of more filters
+More unit tests

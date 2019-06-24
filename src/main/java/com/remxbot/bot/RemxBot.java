@@ -35,11 +35,8 @@
 package com.remxbot.bot;
 
 import com.remxbot.bot.command.CommandRunner;
-import com.remxbot.bot.command.GuildAudioDispatcher;
-import com.remxbot.bot.command.impl.Help;
-import com.remxbot.bot.command.impl.Info;
-import com.remxbot.bot.command.impl.Join;
-import com.remxbot.bot.command.impl.Play;
+import com.remxbot.bot.music.GuildAudioDispatcher;
+import com.remxbot.bot.command.impl.*;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -59,7 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RemxBot {
     final private Logger LOGGER = LoggerFactory.getLogger(RemxBot.class);
     final private DiscordClient client;
-    final private CommandRunner runner = new CommandRunner(this);
+    final private CommandRunner runner = new CommandRunner();
     final private Map<Snowflake, GuildAudioDispatcher> dispatchers = new ConcurrentHashMap<>();
     private AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
 
@@ -71,6 +68,7 @@ public class RemxBot {
                 .subscribe(LOGGER::info);
 
         playerManager.registerSourceManager(new YoutubeAudioSourceManager());
+        playerManager.getConfiguration().setFilterHotSwapEnabled(true);
 
         runner.setPrefix("r:");
         runner.addCommand(new Info());
@@ -78,12 +76,26 @@ public class RemxBot {
 
         runner.addCommand(new Play(this));
         runner.addCommand(new Join(this));
+        runner.addCommand(new Next(this));
+        runner.addCommand(new Prev(this));
+        runner.addCommand(new Playlist(this));
+
+        runner.addCommand(new Exit());
 
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 .map(MessageCreateEvent::getMessage)
                 .flatMap(runner::processCommand).subscribe();
+    }
 
+    public void run() {
         client.login().block();
+    }
+
+    /**
+     * Blocking logout method intended for use by shutdown hooks
+     */
+    public void logout() {
+        client.logout().block();
     }
 
     private Mono<String> inviteMonoCache = null;

@@ -41,6 +41,7 @@ import com.remxbot.bot.util.StringUtil;
 import discord4j.core.object.entity.Message;
 import reactor.core.publisher.Mono;
 
+import java.awt.*;
 import java.util.List;
 
 public class Help implements Command {
@@ -67,6 +68,20 @@ public class Help implements Command {
 
     @Override
     public Mono<Void> process(Message m, List<String> args) {
+        if (args.size() == 2) {
+            return m.getChannel().flatMap(c -> c.createMessage(s -> {
+                s.setContent(String.format("Help for **%s**", args.get(1)));
+                var cmd = runner.getCommandMap().get(args.get(1));
+                if (cmd == null) {
+                    s.setEmbed(e -> {
+                        e.setColor(Color.RED);
+                        e.setDescription("No help found.");
+                    });
+                } else {
+                    s.setEmbed(cmd::formLongDescription);
+                }
+            })).then();
+        }
         return m.getChannel().flatMap(c -> c.createEmbed(e -> {
             var help = new StringBuilder();
             var cmds = runner.getCommandMap().values();
@@ -75,6 +90,9 @@ public class Help implements Command {
                     .mapToInt(String::length)
                     .max().orElseThrow(() -> new RuntimeException("failed to find the longest function name"));
             for (var cat : CommandCategory.values()) {
+                if (cat.equals(CommandCategory.ADMIN)) {
+                    continue;
+                }
                 help.append(String.format("**%s**:\n", cat.getPrettyName()));
                 cmds.stream()
                         .filter(x -> cat.equals(x.getCategory()))

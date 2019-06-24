@@ -36,7 +36,8 @@ package com.remxbot.bot.command;
 
 public enum CommandCategory {
     GENERAL("General commands"),
-    MUSIC("Music-related commands");
+    MUSIC("Music-related commands"),
+    ADMIN("administrative commands");
 
     CommandCategory(String prettyName)  {
         this.prettyName = prettyName;

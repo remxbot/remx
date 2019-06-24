@@ -38,22 +38,22 @@ import com.remxbot.bot.RemxBot;
 import com.remxbot.bot.util.StringUtil;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.util.Snowflake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CommandRunner {
-    private final RemxBot bot;
+    private final List<Snowflake> ADMINS = Stream.of(115076505549144067L, 481143738887045121L, 130510525770629121L)
+            .map(Snowflake::of)
+            .collect(Collectors.toList());
     private final Logger LOGGER = LoggerFactory.getLogger(CommandRunner.class);
     private Map<String, Command> commandMap = new HashMap<>();
-
     private String prefix;
-
-    public CommandRunner(RemxBot bot) {
-        this.bot = bot;
-    }
 
     public Mono<Void> processCommand(Message msg) {
         if (msg.getAuthor().map(User::isBot).orElse(true)) {
@@ -65,6 +65,8 @@ public class CommandRunner {
         }
         LOGGER.debug("Processing command with arguments {}", arguments);
         return Mono.justOrEmpty(commandMap.get(arguments.get(0).substring(prefix.length())))
+                .filter(c -> c.getCategory() != CommandCategory.ADMIN
+                        || msg.getAuthor().flatMap(x -> Optional.of(ADMINS.contains(x.getId()))).orElse(false))
                 .flatMap(c -> c.process(msg, arguments))
                 .onErrorResume(e ->
                         Mono.fromRunnable(() ->

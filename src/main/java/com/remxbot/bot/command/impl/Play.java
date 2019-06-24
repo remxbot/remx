@@ -22,6 +22,7 @@ import com.remxbot.bot.command.Command;
 import com.remxbot.bot.command.CommandCategory;
 import discord4j.core.object.entity.GuildMessageChannel;
 import discord4j.core.object.entity.Message;
+import discord4j.core.spec.EmbedCreateSpec;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -36,6 +37,14 @@ public class Play implements Command {
     @Override
     public String getName() {
         return "play";
+    }
+
+    @Override
+    public void formLongDescription(EmbedCreateSpec embed) {
+        embed.setDescription("Adds track(s) to the player queue, at the end of the queue");
+        embed.addField("Example", "`r:play \"https://www.youtube.com/watch?v=9sJUDx7iEJw\"`", false);
+        embed.addField("Example (search)", "`r:play \"ytsearch: the search\"`", false);
+        embed.addField("Example (playlist)", "`r:play \"https://www.youtube.com/watch?v=q6EoRBvdVPQ&list=PLFsQleAWXsj_4yDeebiIADdH5FMayBiJo\"`", false);
     }
 
     @Override
@@ -59,8 +68,7 @@ public class Play implements Command {
                 .ofType(GuildMessageChannel.class)
                 .flatMapMany(gmc -> {
                     var disp = bot.getGuildAudioDispatcher(gmc.getGuildId());
-                    // TODO return .next() when queue is implemented in order to actually not discard results
-                    return disp.findSongs(args.get(1)).next().doOnNext(disp::enqueue);
+                    return disp.findSongs(args.get(1)).doOnNext(disp::enqueue);
                 })
                 .count()
                 .zipWith(m.getChannel())

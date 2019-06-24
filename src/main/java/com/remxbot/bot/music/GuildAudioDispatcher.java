@@ -15,35 +15,42 @@
  * along with remx.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.remxbot.bot.command;
+package com.remxbot.bot.music;
 
+import com.remxbot.bot.music.playlists.Playlist;
+import com.remxbot.bot.util.ResourceLock;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 import discord4j.core.object.util.Snowflake;
 import discord4j.voice.AudioProvider;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
 
 /**
  * Per guild audio manager and dispatcher using lavaplayer
  */
-public class GuildAudioDispatcher {
+public class GuildAudioDispatcher extends AudioEventAdapter {
     private Snowflake guild;
     final private AudioPlayer player;
     final private AudioPlayerManager manager;
     final private AudioProviderImpl provider = new AudioProviderImpl();
+    final private Playlist playlist = new Playlist();
 
     public GuildAudioDispatcher(Snowflake guild, AudioPlayerManager manager) {
         this.guild = guild;
         player = manager.createPlayer();
         this.manager = manager;
+        player.addListener(this);
     }
 
     public Flux<AudioTrack> findSongs(String url) {
@@ -85,12 +92,41 @@ public class GuildAudioDispatcher {
     }
 
     public void enqueue(AudioTrack track) {
-        // TODO implement queue
-        player.playTrack(track);
+        try (var lg = new ResourceLock(playlist.getLock())) {
+            if (playlist.enqueue(track)) {
+                player.playTrack(track);
+            }
+        }
     }
 
     public AudioProvider getProvider() {
         return provider;
+    }
+
+    public Mono<Void> previous() {
+        return Mono.fromRunnable(() -> {
+            try (var lg = new ResourceLock(playlist.getLock())) {
+                var t = playlist.prev();
+                if (t != null) {
+                    player.playTrack(t.getTrack());
+                }
+            }
+        });
+    }
+
+    public Mono<Void> next() {
+        return Mono.fromRunnable(() -> {
+            try (var lg = new ResourceLock(playlist.getLock())) {
+                var t = playlist.next();
+                if (t != null) {
+                    player.playTrack(t.getTrack());
+                }
+            }
+        });
+    }
+
+    public Playlist getPlaylist() {
+        return playlist;
     }
 
     private class AudioProviderImpl extends AudioProvider {
@@ -108,6 +144,19 @@ public class GuildAudioDispatcher {
                 return true;
             } else {
                 return false;
+            }
+        }
+    }
+
+    @Override
+    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        if (endReason == AudioTrackEndReason.FINISHED) {
+            // TODO implement loop & single
+            try (var lg = new ResourceLock(playlist.getLock())) {
+                var next = playlist.next();
+                if (next != null) {
+                    player.playTrack(next.getTrack());
+                }
             }
         }
     }
