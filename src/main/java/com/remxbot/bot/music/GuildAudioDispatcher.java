@@ -129,6 +129,23 @@ public class GuildAudioDispatcher extends AudioEventAdapter {
         return playlist;
     }
 
+    public Mono<Void> play() {
+        return Mono.fromRunnable(() -> player.setPaused(false));
+    }
+
+    public Mono<Void> pause() {
+        return Mono.fromRunnable(() -> player.setPaused(true));
+    }
+
+    public Mono<Void> clear() {
+        return Mono.fromRunnable(() -> {
+            try (var underscore = new ResourceLock(playlist.getLock())) {
+                player.stopTrack();
+                playlist.clear();
+            }
+        });
+    }
+
     private class AudioProviderImpl extends AudioProvider {
         private final MutableAudioFrame frame = new MutableAudioFrame();
 

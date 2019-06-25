@@ -41,10 +41,11 @@ public class Play implements Command {
 
     @Override
     public void formLongDescription(EmbedCreateSpec embed) {
-        embed.setDescription("Adds track(s) to the player queue, at the end of the queue");
+        embed.setDescription("Sets player to not paused or adds track(s) to the player queue, at the end of the queue");
         embed.addField("Example", "`r:play \"https://www.youtube.com/watch?v=9sJUDx7iEJw\"`", false);
         embed.addField("Example (search)", "`r:play \"ytsearch: the search\"`", false);
         embed.addField("Example (playlist)", "`r:play \"https://www.youtube.com/watch?v=q6EoRBvdVPQ&list=PLFsQleAWXsj_4yDeebiIADdH5FMayBiJo\"`", false);
+        embed.addField("Example (resume)", "`r:play`", true);
     }
 
     @Override
@@ -59,16 +60,19 @@ public class Play implements Command {
 
     @Override
     public Mono<Void> process(Message m, List<String> args) {
+        if (args.size() == 1) {
+            return m.getGuild()
+                    .flatMap(x -> bot.getGuildAudioDispatcher(x.getId()).play());
+        }
         if (args.size() != 2) {
             return m.getChannel().flatMap(c -> c.createMessage(s ->
-                    s.setContent("Expected one argument! For more information see `r:help play`.")))
+                    s.setContent("Expected zero or one arguments! For more information see `r:help play`.")))
                     .then();
         }
-        return m.getChannel()
-                .ofType(GuildMessageChannel.class)
+        return m.getGuild()
                 .flatMapMany(gmc -> {
-                    var disp = bot.getGuildAudioDispatcher(gmc.getGuildId());
-                    return disp.findSongs(args.get(1)).doOnNext(disp::enqueue);
+                    var disp = bot.getGuildAudioDispatcher(gmc.getId());
+                    return disp.findSongs(args.get(1).trim()).doOnNext(disp::enqueue);
                 })
                 .count()
                 .zipWith(m.getChannel())

@@ -96,4 +96,11 @@ public class Playlist implements Iterable<AudioTrack> {
     public Lock getLock() {
         return lock;
     }
+
+    public void clear() {
+        size = 0;
+        head = null;
+        tail = null;
+        current = null;
+    }
 }

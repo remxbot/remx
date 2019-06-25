@@ -3,15 +3,12 @@ package com.remxbot.bot.command.impl;
 import com.remxbot.bot.RemxBot;
 import com.remxbot.bot.command.Command;
 import com.remxbot.bot.command.CommandCategory;
-import com.remxbot.bot.music.playlists.PlaylistIterator;
 import com.remxbot.bot.util.ResourceLock;
+import com.remxbot.bot.util.StringUtil;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import discord4j.core.object.entity.Message;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 import java.util.List;
 
@@ -37,14 +34,16 @@ public class Playlist implements Command {
         return CommandCategory.MUSIC;
     }
 
-    private String formatTrack(AudioTrack track) {
-        return String.format("  %s - %s\n", track.getInfo().author, track.getInfo().title);
+    private String formatTrack(VisualPlaylistEntry track, int len) {
+        return String.format("%c %s - %s\n", track.isActive ? '+' : ' ',
+                StringUtil.pad(len, track.author), track.title);
     }
 
     @Override
     public Mono<Void> process(Message m, List<String> args) {
         return m.getGuild()
                 .flatMap(x -> Mono.just(bot.getGuildAudioDispatcher(x.getId()).getPlaylist()))
+                .filter(x -> !x.isEmpty())
                 .zipWith(m.getChannel())
                 .flatMap(x -> {
                     var playlist = x.getT1();
@@ -52,32 +51,44 @@ public class Playlist implements Command {
                     var desc = new StringBuilder();
                     desc.append(String.format("There are currently **%d** songs in the queue.```diff\n",
                                               playlist.count()));
-                    var queue = new CircularFifoQueue<String>(32);
-                    // TODO align all the dashes
+                    CircularFifoQueue<VisualPlaylistEntry> queue = new CircularFifoQueue<>(33);
                     try (var underscore = new ResourceLock(playlist.getLock())) {
                         var iter = playlist.playlistIterator();
-                        AudioTrack next = null;
-                        while (iter.hasNext()) {
-                            next = iter.next();
-                            if (iter.isActuallyCurrent()) {
-                                break;
+                        boolean sw = false;
+                        var len = 0;
+                        var i = 0;
+                        while (iter.hasNext() && i < 16) {
+                            var next = iter.next();
+                            queue.add(new VisualPlaylistEntry(next, iter.isActuallyCurrent()));
+                            len = Math.max(len, next.getInfo().author.length());
+                            if (sw) {
+                                i++;
                             }
-                            queue.add(formatTrack(next));
+                            if (iter.isActuallyCurrent()) {
+                                sw = true;
+                            }
                         }
-                        if (next == null) {
-                            return channel.createMessage("No songs in playlist.");
-                        }
-                        for (String title : queue) {
-                            desc.append(title);
-                        }
-                        if (iter.isActuallyCurrent()) {
-                            desc.append('+').append(formatTrack(next).substring(1));
-                        }
-                        for (int i = 0; i < (64 - queue.size()) && iter.hasNext(); i++) {
-                            desc.append(formatTrack(iter.next()));
+                        for (VisualPlaylistEntry e : queue) {
+                            var str = formatTrack(e, len);
+                            if (desc.length() + str.length() < 1997) {
+                                desc.append(str);
+                            } else break;
                         }
                         return channel.createMessage(desc.append("```").toString());
                     }
-                }).then();
+                })
+                .switchIfEmpty(m.getChannel().flatMap(c -> c.createMessage("Playlist empty")))
+                .then();
+    }
+
+    private class VisualPlaylistEntry {
+        public String author;
+        public String title;
+        public boolean isActive;
+        public VisualPlaylistEntry(AudioTrack track, boolean active) {
+            this.isActive = active;
+            this.title = track.getInfo().title;
+            this.author = track.getInfo().author;
+        }
     }
 }

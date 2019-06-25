@@ -79,6 +79,8 @@ public class RemxBot {
         runner.addCommand(new Next(this));
         runner.addCommand(new Prev(this));
         runner.addCommand(new Playlist(this));
+        runner.addCommand(new Pause(this));
+        runner.addCommand(new Clear(this));
 
         runner.addCommand(new Exit());
 
