@@ -1,6 +1,7 @@
 package com.remxbot.bot.music.playlists;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
@@ -75,6 +76,7 @@ public class Playlist implements Iterable<AudioTrack> {
     }
 
     @Override
+    @NonNull
     public Iterator<AudioTrack> iterator() {
         return playlistIterator();
     }

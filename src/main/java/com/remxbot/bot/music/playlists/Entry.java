@@ -34,11 +34,7 @@ public class Entry {
      * @return the track this entry refers to, or a clone of it if it has already been seen once
      */
     public AudioTrack getTrack() {
-        if (gotten) {
-            return track.makeClone();
-        }
-        gotten = true;
-        return track;
+        return track.makeClone();
     }
 
     /**

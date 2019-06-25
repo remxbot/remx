@@ -18,7 +18,7 @@ public class PlaylistIterator implements Iterator<AudioTrack> {
 
     @Override
     public boolean hasNext() {
-        return getEffectiveCurrentEntry() != null && getEffectiveCurrentEntry().next != null;
+        return current == null || current.next != null;
     }
 
     @Override
@@ -43,10 +43,6 @@ public class PlaylistIterator implements Iterator<AudioTrack> {
      *         iterator
      */
     public boolean isActuallyCurrent() {
-        return playlist.getCurrent().equals(current);
-    }
-
-    private Entry getEffectiveCurrentEntry() {
-        return  current != null ? current : playlist.tail;
+        return current != null && current.equals(playlist.getCurrent());
     }
 }

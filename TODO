@@ -1,9 +1,10 @@
 Audio state control
 Loop mode
 Single mode (overrides loop)
-Player controls
+Player controls (DONE)
 Filters:
-  - Equalizer (provided with lavaplayer)
+  - Equalizer (provided with lavaplayer) (DONE)
   - Gain control
   - TODO: think of more filters
 More unit tests
+System for shard and encoder redistribution

@@ -35,8 +35,9 @@
 package com.remxbot.bot;
 
 import com.remxbot.bot.command.CommandRunner;
-import com.remxbot.bot.music.GuildAudioDispatcher;
 import com.remxbot.bot.command.impl.*;
+import com.remxbot.bot.music.GuildAudioDispatcher;
+import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -69,6 +70,7 @@ public class RemxBot {
 
         playerManager.registerSourceManager(new YoutubeAudioSourceManager());
         playerManager.getConfiguration().setFilterHotSwapEnabled(true);
+        playerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_OPUS);
 
         runner.setPrefix("r:");
         runner.addCommand(new Info());

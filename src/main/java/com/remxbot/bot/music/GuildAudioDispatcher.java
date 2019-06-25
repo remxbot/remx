@@ -17,6 +17,7 @@
 
 package com.remxbot.bot.music;
 
+import com.remxbot.bot.music.filter.FilterChainManager;
 import com.remxbot.bot.music.playlists.Playlist;
 import com.remxbot.bot.util.ResourceLock;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
@@ -45,6 +46,7 @@ public class GuildAudioDispatcher extends AudioEventAdapter {
     final private AudioPlayerManager manager;
     final private AudioProviderImpl provider = new AudioProviderImpl();
     final private Playlist playlist = new Playlist();
+    final private FilterChainManager filterManager = new FilterChainManager(this);
 
     public GuildAudioDispatcher(Snowflake guild, AudioPlayerManager manager) {
         this.guild = guild;
@@ -146,6 +148,17 @@ public class GuildAudioDispatcher extends AudioEventAdapter {
         });
     }
 
+    public AudioPlayer getPlayer() {
+        return player;
+    }
+
+    /**
+     * @return The filter chain manager associated with this dispatcher
+     */
+    public FilterChainManager getFilterManager() {
+        return filterManager;
+    }
+
     private class AudioProviderImpl extends AudioProvider {
         private final MutableAudioFrame frame = new MutableAudioFrame();
 
@@ -167,7 +180,7 @@ public class GuildAudioDispatcher extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if (endReason == AudioTrackEndReason.FINISHED) {
+        if (endReason.mayStartNext) {
             // TODO implement loop & single
             try (var lg = new ResourceLock(playlist.getLock())) {
                 var next = playlist.next();
