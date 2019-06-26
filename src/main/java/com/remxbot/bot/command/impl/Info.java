@@ -45,6 +45,12 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public class Info implements Command {
+    final private RemxBot bot;
+
+    public Info(RemxBot bot) {
+        this.bot = bot;
+    }
+
     @Override
     public String getName() {
         return "info";
@@ -62,15 +68,21 @@ public class Info implements Command {
 
     @Override
     public Mono<Void> process(Message m, List<String> args) {
-        return m.getChannel()
-                .zipWhen(x -> x.getClient().getGuilds().count())
+        return Mono.zip(m.getChannel(), m.getClient().getGuilds().count(), bot.getInvite())
                 .flatMap(x -> x.getT1().createEmbed(embed -> {
-            embed.setDescription("remx: discord music bot with sound processing capabilities");
-            embed.addField("Shard ID", x.getT1().getClient().getConfig().getShardIndex() + "", true);
-            embed.addField("This shard is serving", String.format("%d guild(s)", x.getT2()), true);
-            embed.addField("Bot version", RemxBot.getVersion(), true);
-            embed.addField("Discord4J version", GitProperties.getProperties().getProperty(GitProperties.APPLICATION_VERSION), true);
-            embed.addField("License notice", StringUtil.LICENSE_NOTICE, false);
-        })).then();
+                    var chan = x.getT1();
+                    var count = x.getT2();
+                    var invite = x.getT3();
+                    var d4jver = GitProperties.getProperties().getProperty(GitProperties.APPLICATION_VERSION);
+                    embed.setDescription("remx: discord music bot with sound processing capabilities");
+                    embed.addField("Shard ID", chan.getClient().getConfig().getShardIndex() + "", true);
+                    embed.addField("Total shards", chan.getClient().getConfig().getShardCount() + "", true);
+                    embed.addField("This shard is serving", String.format("%d guild(s)", count), true);
+                    embed.addField("Bot version", RemxBot.getVersion(), true);
+                    embed.addField("Discord4J version", d4jver, true);
+                    embed.addField("Invite link", String.format("[click](%s)", invite), true);
+
+                    embed.addField("License notice", StringUtil.LICENSE_NOTICE, false);
+                })).then();
     }
 }

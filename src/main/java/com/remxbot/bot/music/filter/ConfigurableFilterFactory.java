@@ -7,7 +7,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 /**
  * Provides an interface for factories that make configurable filters.<br/>
- * After all modifications to a filter are applied an update will be issued.
+ * After all modifications to a filter are applied an update will be issued.<br/>
+ * It is suggested to keep attribute IDs starting with zero and sequential.<br/>
+ * The number and IDs of attributes shall not change during runtime.
  *
  * <p><b>NOTE:</b> Each factory should attempt to keep as few recreations as possible by caching the filters when
  *                 they are not changed, as change to any filter will cause additional calls to
@@ -29,6 +31,19 @@ public interface ConfigurableFilterFactory {
      * @throws IllegalArgumentException in the case that the ID is invalid
      */
     float getFloatAttribute(int id) throws IllegalArgumentException;
+
+    /**
+     * @return the current values of all attributes
+     */
+    float[] getAllAttributes();
+
+    /**
+     * Alters all internal attributes to be the provided new one.<br/>
+     * The attributes are verified and shall not be altered if at least one fails verification.
+     * @param allAttributes New values for all attributes. Expected to be the same size as {@link #getAllAttributes()}
+     * @throws IllegalArgumentException if the values do not pass verification
+     */
+    void setAllAttributes(float[] allAttributes) throws IllegalArgumentException;
 
     /**
      * Checks to see whether the generated audio filter can work with the given format

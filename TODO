@@ -8,3 +8,4 @@ Filters:
   - TODO: think of more filters
 More unit tests
 System for shard and encoder redistribution (see: 0MQ, magma)
+Filter reordering in REST API

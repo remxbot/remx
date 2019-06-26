@@ -4,10 +4,7 @@ import com.remxbot.bot.music.GuildAudioDispatcher;
 import com.remxbot.bot.util.ResourceLock;
 import com.remxbot.bot.util.UUIDTools;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -34,7 +31,6 @@ public class FilterChainManager {
         try (var locked = new ResourceLock(lock)) {
             UUID id = UUIDTools.ensureUniqueRandom(filters::containsKey);
             filters.put(id, filter);
-            updateFilters();
             return id;
         }
     }
@@ -69,5 +65,12 @@ public class FilterChainManager {
                 dispatcher.getPlayer().setFilterFactory(new ProxyFilterFactory(new LinkedList<>(filters.values())));
             }
         }
+    }
+
+    /**
+     * @return unmodifiable version of the internal filters map
+     */
+    public Map<UUID, ConfigurableFilterFactory> getFilterMap() {
+        return Collections.unmodifiableMap(filters);
     }
 }

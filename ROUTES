@@ -1,0 +1,25 @@
+Filter configuration interface endpoints:
+    (defined in FilterConfigurationInterface)
+  - /guilds/:gid/filters/
+    - GET - lists filters active in guild
+        Response: application/json representation of FilterRepresentation[]
+                  FilterRepresentation => {"uuid", "className"}
+    - PUT - creates a new filter
+        Request : text/plain representation of required filter's name
+        Response: application/json representation of filter UUID as string
+
+  - /guilds/:gid/filters/:uuid/
+    - DELETE - removes filter from chain and updates the chain
+    - GET    - retrieves all the attributes of the filter
+        Response: application/json representation of a float[]
+                  Implementation dependant
+    - PUT    - sets all the attributes of the filter
+        Request : application/json representation of a float[]
+        Response: either empty or error
+
+  - /guilds/:gid/filters/:uuid/:attribute
+    - GET - retrieves the value of the attribute requested
+        Response: application/json representation of a float
+    - PUT - sets the value of the attribute requested
+        Request : application/json representation of a float
+        Response: either empty or error

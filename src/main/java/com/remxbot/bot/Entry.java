@@ -51,14 +51,30 @@
 
 package com.remxbot.bot;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
 public class Entry {
-    // TODO Set up Spring
+    private static RemxBot bot;
+    final private static Logger LOGGER = LoggerFactory.getLogger(Entry.class);
+
+    @Bean
+    public static RemxBot remxBot() {
+        return bot;
+    }
+
     public static void main(String...args) {
-        var bot = new RemxBot(args[0]);
+        bot = new RemxBot(args[0]);
+        SpringApplication.run(Entry.class, args);
 
         // attempt a graceful shutdown even though it'll most likely fail
         Runtime.getRuntime().addShutdownHook(new Thread(bot::logout));
 
-        bot.run();
+        bot.run().block();
+        System.exit(0);
     }
 }

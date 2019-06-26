@@ -73,7 +73,7 @@ public class RemxBot {
         playerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_OPUS);
 
         runner.setPrefix("r:");
-        runner.addCommand(new Info());
+        runner.addCommand(new Info(this));
         runner.addCommand(new Help(runner));
 
         runner.addCommand(new Play(this));
@@ -92,8 +92,8 @@ public class RemxBot {
                 .flatMap(runner::processCommand).subscribe();
     }
 
-    public void run() {
-        client.login().block();
+    public Mono<Void> run() {
+        return client.login();
     }
 
     /**
@@ -113,6 +113,10 @@ public class RemxBot {
                     .cache();
         }
         return inviteMonoCache;
+    }
+
+    public boolean hasGuildAudioDispatcher(Snowflake id) {
+        return dispatchers.containsKey(id);
     }
 
     public GuildAudioDispatcher getGuildAudioDispatcher(Snowflake id) {

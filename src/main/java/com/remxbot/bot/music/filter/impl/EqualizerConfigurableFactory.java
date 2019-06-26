@@ -18,10 +18,7 @@ public class EqualizerConfigurableFactory implements ConfigurableFilterFactory {
     public synchronized boolean setFloatAttribute(int id, float value) {
         if (value >= -0.25 && value <= 1
                 && id >= 0 && id < Equalizer.BAND_COUNT) {
-            bandMultipliers[id] = value;
-            if (cache != null) {
-                cache.setGain(id, value);
-            }
+            setFloatAttributeDirect(id, value);
             return true;
         }
         return false;
@@ -36,6 +33,27 @@ public class EqualizerConfigurableFactory implements ConfigurableFilterFactory {
     }
 
     @Override
+    public synchronized float[] getAllAttributes() {
+        return bandMultipliers.clone();
+    }
+
+    @Override
+    public synchronized void setAllAttributes(float[] allAttributes) throws IllegalArgumentException {
+        if (allAttributes.length != Equalizer.BAND_COUNT) {
+            throw new IllegalArgumentException("band count wrong");
+        }
+        for (float f : allAttributes) {
+            if (f < -0.25f || f > 1f) {
+                throw new IllegalArgumentException("band out of range");
+            }
+        }
+
+        for (int i = 0; i < allAttributes.length; i++) {
+            setFloatAttributeDirect(i, allAttributes[i]);
+        }
+    }
+
+    @Override
     public boolean isCompatible(AudioDataFormat format) {
         return Equalizer.isCompatible(format);
     }
@@ -43,5 +61,12 @@ public class EqualizerConfigurableFactory implements ConfigurableFilterFactory {
     @Override
     public synchronized AudioFilter buildFilter(AudioTrack track, AudioDataFormat format, UniversalPcmAudioFilter output) {
         return cache = new Equalizer(format.channelCount, output, bandMultipliers);
+    }
+
+    private void setFloatAttributeDirect(int id, float value) {
+        bandMultipliers[id] = value;
+        if (cache != null) {
+            cache.setGain(id, value);
+        }
     }
 }
