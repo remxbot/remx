@@ -34,9 +34,11 @@
 
 package com.remxbot.bot.command.impl;
 
+import com.remxbot.bot.RemxBot;
 import com.remxbot.bot.command.Command;
 import com.remxbot.bot.command.CommandCategory;
 import com.remxbot.bot.util.StringUtil;
+import discord4j.common.GitProperties;
 import discord4j.core.object.entity.Message;
 import reactor.core.publisher.Mono;
 
@@ -60,8 +62,14 @@ public class Info implements Command {
 
     @Override
     public Mono<Void> process(Message m, List<String> args) {
-        return m.getChannel().flatMap(x -> x.createEmbed(embed -> {
+        return m.getChannel()
+                .zipWhen(x -> x.getClient().getGuilds().count())
+                .flatMap(x -> x.getT1().createEmbed(embed -> {
             embed.setDescription("remx: discord music bot with sound processing capabilities");
+            embed.addField("Shard ID", x.getT1().getClient().getConfig().getShardIndex() + "", true);
+            embed.addField("This shard is serving", String.format("%d guild(s)", x.getT2()), true);
+            embed.addField("Bot version", RemxBot.getVersion(), true);
+            embed.addField("Discord4J version", GitProperties.getProperties().getProperty(GitProperties.APPLICATION_VERSION), true);
             embed.addField("License notice", StringUtil.LICENSE_NOTICE, false);
         })).then();
     }

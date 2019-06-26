@@ -83,6 +83,7 @@ public class RemxBot {
         runner.addCommand(new Playlist(this));
         runner.addCommand(new Pause(this));
         runner.addCommand(new Clear(this));
+        runner.addCommand(new Track(this));
 
         runner.addCommand(new Exit());
 
@@ -116,5 +117,10 @@ public class RemxBot {
 
     public GuildAudioDispatcher getGuildAudioDispatcher(Snowflake id) {
         return dispatchers.computeIfAbsent(id, gid -> new GuildAudioDispatcher(gid, playerManager));
+    }
+
+    public static String getVersion() {
+        var manifest = RemxBot.class.getPackage().getImplementationVersion();
+        return manifest != null ? manifest : "INDEV";
     }
 }

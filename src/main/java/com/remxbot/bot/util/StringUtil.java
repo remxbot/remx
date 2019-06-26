@@ -41,6 +41,7 @@ import java.util.List;
  * Various utilities for dealing with strings
  */
 public class StringUtil {
+    public static final String BAR = "\u25ac";
     public static final String LICENSE_NOTICE = "remx is free software, for more information see:\n" +
             "- [Our Git repository](https://github.com/remxbot/remx)\n" +
             "- [COPYING](https://github.com/remxbot/remx/blob/master/COPYING) in said repository\n" +
@@ -100,6 +101,56 @@ public class StringUtil {
             sb.append(String.valueOf(pad).repeat(min - str.length()));
         }
         return sb.toString();
+    }
+
+    /**
+     * @param identifier YouTube video identifier
+     * @return the URL on which the thumbnail can be found
+     */
+    public static String youtubeThumb(String identifier) {
+        return String.format("https://img.youtube.com/vi/%s/hqdefault.jpg", identifier);
+    }
+
+    /**
+     * Generates a nice looking progress bar for use in embeds
+     * @param progress percentage [0, 1]
+     * @param uri URI to use in the highlighted part of the bar, if null default exists
+     * @return nicely formatted progress bar
+     */
+    public static String generateProgress(float progress, String uri) {
+        int sections = (int) (progress * 10);
+        if (uri == null) {
+            // if you get the reference you deserve a veteran discount
+            uri = "http://a/%%30%30";
+        }
+        if (sections == 0) {
+            return BAR.repeat(10);
+        } else {
+            return String.format("[[%s](%s)%s]", BAR.repeat(sections), uri, BAR.repeat(10 - sections));
+        }
+    }
+
+    /**
+     * @param duration duration to format in millis
+     * @return duration formatted as <code>(dd:hh:)mm:ss</code>. The part in parenthesis is optional.
+     */
+    public static String formatLength(long duration) {
+        var builder = new StringBuilder();
+        var days = duration / (24 * 3600 * 1000);
+        duration %= 24 * 3600 * 1000;
+        var hours = duration / (3600 * 1000);
+        duration %= 3600 * 1000;
+        var minutes = duration / (60 * 1000);
+        duration %= 60 * 1000;
+        var seconds = duration / 1000;
+        if (days > 0) {
+            builder.append(String.format("%02d", days)).append(':');
+        }
+        if (hours > 0) {
+            builder.append(String.format("%02d", hours)).append(':');
+        }
+        return builder.append(String.format("%02d", minutes)).append(':')
+                      .append(String.format("%02d", seconds)).toString();
     }
 }
 
