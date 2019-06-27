@@ -21,8 +21,9 @@ public interface ConfigurableFilterFactory {
      * @param id ID of the attribute to change
      * @param value new value of the attribute
      * @return true if the value passed verification
+     * @throws IllegalArgumentException in the case that the ID is invalid
      */
-    boolean setFloatAttribute(int id, float value);
+    boolean setFloatAttribute(int id, float value) throws IllegalArgumentException;
 
     /**
      * Retrieves the value of a floating point attribute

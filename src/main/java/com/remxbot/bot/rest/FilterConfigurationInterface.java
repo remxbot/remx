@@ -3,6 +3,7 @@ package com.remxbot.bot.rest;
 import com.google.common.collect.ImmutableMap;
 import com.remxbot.bot.RemxBot;
 import com.remxbot.bot.music.filter.ConfigurableFilterFactory;
+import com.remxbot.bot.music.filter.impl.AutoGainControlFactory;
 import com.remxbot.bot.music.filter.impl.EqualizerConfigurableFactory;
 import discord4j.core.object.util.Snowflake;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ public class FilterConfigurationInterface {
     private Map<String, Supplier<ConfigurableFilterFactory>> factoryFactories =
             ImmutableMap.<String, Supplier<ConfigurableFilterFactory>>builder()
                     .put("equalizer", EqualizerConfigurableFactory::new)
+                    .put("autogain", AutoGainControlFactory::new)
                     .build();
 
     @Autowired
