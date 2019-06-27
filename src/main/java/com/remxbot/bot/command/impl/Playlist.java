@@ -26,7 +26,7 @@ public class Playlist implements Command {
 
     @Override
     public String getDescription() {
-        return "Shows up to 65 songs around the currently selected one.";
+        return "Shows up to 33 songs around the currently selected one.";
     }
 
     @Override
@@ -57,7 +57,7 @@ public class Playlist implements Command {
                         boolean sw = false;
                         var len = 0;
                         var i = 0;
-                        while (iter.hasNext() && i < 16) {
+                        while (iter.hasNext() && (!queue.isAtFullCapacity() || i < 16)) {
                             var next = iter.next();
                             queue.add(new VisualPlaylistEntry(next, iter.isActuallyCurrent()));
                             len = Math.max(len, next.getInfo().author.length());

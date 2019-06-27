@@ -30,8 +30,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
+import discord4j.core.object.entity.VoiceChannel;
 import discord4j.core.object.util.Snowflake;
 import discord4j.voice.AudioProvider;
+import discord4j.voice.VoiceConnection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -47,6 +49,7 @@ public class GuildAudioDispatcher extends AudioEventAdapter {
     final private AudioProviderImpl provider = new AudioProviderImpl();
     final private Playlist playlist = new Playlist();
     final private FilterChainManager filterManager = new FilterChainManager(this);
+    private Mono<VoiceConnection> voiceConnection = null;
 
     public GuildAudioDispatcher(Snowflake guild, AudioPlayerManager manager) {
         this.guild = guild;
@@ -157,6 +160,30 @@ public class GuildAudioDispatcher extends AudioEventAdapter {
      */
     public FilterChainManager getFilterManager() {
         return filterManager;
+    }
+
+    /**
+     * Manages connections to voice channels to assure only a single one exists
+     * @param c voice channel to join
+     * @return Mono with the audio connection
+     */
+    public synchronized Mono<VoiceConnection> connect(VoiceChannel c) {
+        if (voiceConnection != null) {
+            //noinspection CallingSubscribeInNonBlockingScope disconnect old connection as a workaround
+            voiceConnection.subscribe(VoiceConnection::disconnect);
+        }
+        voiceConnection = c.join(x -> x.setProvider(provider)).cache();
+        return voiceConnection;
+    }
+
+    /**
+     * Disconnects from a voice connection if one exists
+     */
+    public synchronized void disconnect() {
+        if (voiceConnection != null) {
+            voiceConnection.subscribe(VoiceConnection::disconnect);
+            voiceConnection = null;
+        }
     }
 
     private class AudioProviderImpl extends AudioProvider {

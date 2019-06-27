@@ -54,7 +54,7 @@ public class Join implements Command {
         return msg.getAuthorAsMember()
                 .flatMap(Member::getVoiceState)
                 .flatMap(VoiceState::getChannel)
-                .flatMap(c -> c.join(s -> s.setProvider(bot.getGuildAudioDispatcher(c.getGuildId()).getProvider())))
+                .flatMap(c -> bot.getGuildAudioDispatcher(c.getGuildId()).connect(c))
                 .then();
     }
 }

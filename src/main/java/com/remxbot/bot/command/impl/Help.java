@@ -72,7 +72,7 @@ public class Help implements Command {
             return m.getChannel().flatMap(c -> c.createMessage(s -> {
                 s.setContent(String.format("Help for **%s**", args.get(1)));
                 var cmd = runner.getCommandMap().get(args.get(1));
-                if (cmd == null) {
+                if (cmd == null || cmd.getCategory() == CommandCategory.ADMIN) {
                     s.setEmbed(e -> {
                         e.setColor(Color.RED);
                         e.setDescription("No help found.");
@@ -90,7 +90,7 @@ public class Help implements Command {
                     .mapToInt(String::length)
                     .max().orElseThrow(() -> new RuntimeException("failed to find the longest function name"));
             for (var cat : CommandCategory.values()) {
-                if (cat.equals(CommandCategory.ADMIN)) {
+                if (CommandCategory.ADMIN.equals(cat)) {
                     continue;
                 }
                 help.append(String.format("**%s**:\n", cat.getPrettyName()));
