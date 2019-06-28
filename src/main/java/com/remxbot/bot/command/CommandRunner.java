@@ -34,7 +34,6 @@
 
 package com.remxbot.bot.command;
 
-import com.remxbot.bot.RemxBot;
 import com.remxbot.bot.util.StringUtil;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
@@ -64,17 +63,17 @@ public class CommandRunner {
             return Mono.empty();
         }
         LOGGER.debug("Processing command with arguments {}", arguments);
-        return Mono.justOrEmpty(commandMap.get(arguments.get(0).substring(prefix.length())))
+        var cmd = arguments.get(0);
+        return Mono.justOrEmpty(commandMap.get(cmd.substring(prefix.length())))
                 .filter(c -> c.getCategory() != CommandCategory.ADMIN
                         || msg.getAuthor().flatMap(x -> Optional.of(ADMINS.contains(x.getId()))).orElse(false))
                 .flatMap(c -> c.process(msg, arguments))
-                .onErrorResume(e ->
-                        Mono.fromRunnable(() ->
-                                LOGGER.error("Command processing failed for " + arguments.get(0), e))
-                                .then(msg.getChannel()
-                                        .flatMap(c -> c.createMessage(s ->
-                                                s.setContent("There was an error while processing your command.")))
-                                        .then()));
+                .onErrorResume(e -> Mono.fromRunnable(() -> LOGGER.error("Command processing failed for " + cmd, e))
+                        .then(msg.getChannel()
+                                .flatMap(c ->
+                                        c.createMessage("There was an error while processing your command.\n"
+                                                + e.getMessage()))
+                                .then()));
     }
 
     public void addCommand(Command cmd) {

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class FilterConfigurationInterface {
     private final RemxBot remxBot;
 
-    private Map<String, Supplier<ConfigurableFilterFactory>> factoryFactories =
+    public static final Map<String, Supplier<ConfigurableFilterFactory>> FACTORY_FACTORIES =
             ImmutableMap.<String, Supplier<ConfigurableFilterFactory>>builder()
                     .put("equalizer", EqualizerConfigurableFactory::new)
                     .put("autogain", AutoGainControlFactory::new)
@@ -67,11 +67,11 @@ public class FilterConfigurationInterface {
         if (!remxBot.hasGuildAudioDispatcher(guild)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Unmapped guild");
         }
-        if (!factoryFactories.containsKey(filterName)) {
+        if (!FACTORY_FACTORIES.containsKey(filterName)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filter name");
         }
         var manager = remxBot.getGuildAudioDispatcher(guild).getFilterManager();
-        var uuid = manager.appendFilter(factoryFactories.get(filterName).get());
+        var uuid = manager.appendFilter(FACTORY_FACTORIES.get(filterName).get());
         manager.updateFilters();
         return uuid;
 

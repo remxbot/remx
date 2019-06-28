@@ -84,6 +84,7 @@ public class RemxBot {
         runner.addCommand(new Pause(this));
         runner.addCommand(new Clear(this));
         runner.addCommand(new Track(this));
+        runner.addCommand(new Filter(this));
 
         runner.addCommand(new Exit());
 
