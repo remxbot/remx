@@ -46,6 +46,8 @@ import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.ApplicationInfo;
+import discord4j.core.object.presence.Activity;
+import discord4j.core.object.presence.Presence;
 import discord4j.core.object.util.Snowflake;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,9 @@ public class RemxBot {
     private AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
 
     public RemxBot(String token) {
-        client = new DiscordClientBuilder(token).build();
+        client = new DiscordClientBuilder(token)
+                .setInitialPresence(Presence.online(Activity.watching("r:help")))
+                .build();
         client.getEventDispatcher().on(ReadyEvent.class)
                 .doOnNext(e -> LOGGER.info("Logged in as {}", e.getSelf().getUsername()))
                 .flatMap(e -> getInvite())
