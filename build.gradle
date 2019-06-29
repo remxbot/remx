@@ -17,7 +17,7 @@
 
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '5.0.0'
+    id 'org.springframework.boot' version '2.1.6.RELEASE'
 }
 
 group 'com.remxbot'
@@ -43,9 +43,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web:2.1.6.RELEASE'
 }
 
-jar {
+bootJar {
+    mainClassName = 'com.remxbot.bot.Entry'
     manifest {
-        attributes 'Implementation-Version': version,
-                   'Main-Class': 'com.remxbot.bot.Entry'
+        attributes 'Implementation-Version': version
     }
 }
+
+task("shadowJar", dependsOn: build)
